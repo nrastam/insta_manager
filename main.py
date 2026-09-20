@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import traceback
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from instagrapi import Client
 
@@ -27,35 +28,52 @@ def login_instagram():
         raise ValueError('Instagram credentials not set in environment variables')
     cl.login(username, password)
 
-def _to_dict(obj):
-    """Convert a list of objects (User or dict) to dict keyed by pk."""
-    if isinstance(obj, dict):
-        return obj
-    if isinstance(obj, list):
-        result = {}
-        for item in obj:
-            if isinstance(item, dict):
-                pk = item.get('pk')
-            else:
-                pk = getattr(item, 'pk', None)
-            if pk is not None:
-                result[pk] = item
-        return result
-    # fallback: try to treat as dict-like
-    try:
-        return dict(obj)
-    except Exception:
-        return {}
-
 def get_not_following_back():
     login_instagram()
     user_id = cl.user_id_from_username(cl.username)
-    following_raw = cl.user_following(user_id, amount=0)  # dict or list?
+    # Get raw returns; they could be dict or list
+    following_raw = cl.user_following(user_id, amount=0)
     followers_raw = cl.user_followers(user_id, amount=0)
-    following = _to_dict(following_raw)
-    followers = _to_dict(followers_raw)
-    not_following_back = [user for uid, user in following.items() if uid not in followers]
-    result = [{'pk': uid, 'username': user.username, 'full_name': user.full_name} for uid, user in not_following_back.items()]
+    
+    # Helper to extract list of user objects
+    def extract_users(raw):
+        if isinstance(raw, dict):
+            # dict of pk: user
+            return list(raw.values())
+        elif isinstance(raw, list):
+            return raw
+        else:
+            # fallback: try to iterate
+            try:
+                return list(raw)
+            except Exception:
+                return []
+    
+    following_users = extract_users(following_raw)
+    followers_users = extract_users(followers_raw)
+    
+    # Build sets of pk
+    following_pks = set()
+    followers_pks = set()
+    user_by_pk = {}
+    
+    for u in following_users:
+        pk = getattr(u, 'pk', None) if not isinstance(u, dict) else u.get('pk')
+        if pk is not None:
+            following_pks.add(pk)
+            user_by_pk[pk] = u
+    
+    for u in followers_users:
+        pk = getattr(u, 'pk', None) if not isinstance(u, dict) else u.get('pk')
+        if pk is not None:
+            followers_pks.add(pk)
+    
+    not_following_pks = following_pks - followers_pks
+    not_following_users = [user_by_pk[pk] for pk in not_following_pks if pk in user_by_pk]
+    
+    result = [{'pk': u.pk if not isinstance(u, dict) else u.get('pk'),
+               'username': u.username if not isinstance(u, dict) else u.get('username'),
+               'full_name': u.full_name if not isinstance(u, dict) else u.get('full_name')} for u in not_following_users]
     save_targets(result)
     return result
 
@@ -107,9 +125,11 @@ def refresh():
             'message': f'Lijst vernieuwd: {len(targets)} accounts gevonden'
         })
     except Exception as e:
+        # Return detailed error for debugging
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': str(e),
+            'type': type(e).__name__
         }), 500
 
 @app.route('/unfollow/<pk>', methods=['POST'])

@@ -24,12 +24,10 @@
         <p><strong>Wachtwoord ingesteld:</strong> {{ 'Ja' if insta_pass_set else 'Nee' }}</p>
     </div>
     <form id="refreshForm" method="post" action="{{ url_for('refresh') }}">
-        <button type="submit" class="btn btn-primary" id="refreshBtn">Lijst ophalen</button>
-        <div class="ms-3" id="spinner" class="d-none">
-            <div class="spinner-border spinner-border-sm" role="status">
-                <span class="visually-hidden">Laden...</span>
-            </div>
-        </div>
+        <button type="submit" class="btn btn-primary" id="refreshBtn">
+            Lijst ophalen
+            <span id="refreshSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+        </button>
         <div id="status" class="ms-3 mt-2 small"></div>
     </form>
     {% if targets %}
@@ -65,7 +63,7 @@
 document.getElementById('refreshForm').addEventListener('submit', function(e) {
     e.preventDefault(); // prevent normal submit
     const btn = document.getElementById('refreshBtn');
-    const spinner = document.getElementById('spinner');
+    const spinner = document.getElementById('refreshSpinner');
     const status = document.getElementById('status');
     btn.disabled = true;
     spinner.classList.remove('d-none');
@@ -85,7 +83,7 @@ document.getElementById('refreshForm').addEventListener('submit', function(e) {
             // Optionally reload to show updated list
             setTimeout(() => { location.reload(); }, 1500);
         } else {
-            status.textContent = 'Fout: ' + (data.error || 'onbekende fout');
+            status.textContent = 'Fout: ' + (data.error || 'onbekende fout') + ' (type: ' + (data.type || 'unknown') + ')';
             status.style.color = 'dc3545';
         }
     })
