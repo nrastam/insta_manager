@@ -1,0 +1,3 @@
+Flask==3.0.3
+instagrapi==1.2.5
+pillow>=10.0.0
