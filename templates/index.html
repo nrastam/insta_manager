@@ -19,10 +19,14 @@
         {% endfor %}
       {% endif %}
     {% endwith %}
+    <div class="mb-3">
+        <p><strong>Instagram gebruikersnaam:</strong> {{ insta_user if insta_user else '(niet ingesteld)' }}</p>
+        <p><strong>Wachtwoord ingesteld:</strong> {{ 'Ja' if insta_pass_set else 'Nee' }}</p>
+    </div>
+    <form method="post" action="{{ url_for('refresh') }}" class="mb-3">
+        <button type="submit" class="btn btn-primary">Lijst vernieuwen</button>
+    </form>
     {% if targets %}
-        <form method="post" action="{{ url_for('index') }}" class="mb-3">
-            <button type="submit" name="refresh" value="1" class="btn btn-primary">Lijst vernieuwen</button>
-        </form>
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -48,7 +52,7 @@
             </tbody>
         </table>
     {% else %}
-        <p>Gegevens niet beschikbaar. Zorg dat omgevingsvariabelen INSTA_USERNAME en INSTA_PASSWORD zijn ingesteld en klik op 'Lijst vernieuwen'.</p>
+        <p>Geen gegevens beschikbaar. Klik op 'Lijst vernieuwen' om de lijst op te halen (na het invullen van de Instagram‑credentials in de .env).</p>
     {% endif %}
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
