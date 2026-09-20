@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  insta_manager:
+    build: .
+    container_name: insta_manager
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - INSTA_USERNAME=${INSTA_USERNAME}
+      - INSTA_PASSWORD=${INSTA_PASSWORD}
+    volumes:
+      - ./data:/app/data  # persist the JSON file between container restarts
