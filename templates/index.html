@@ -92,7 +92,7 @@ document.getElementById('refreshForm').addEventListener('submit', function(e) {
     btn.disabled = true;
     spinner.classList.remove('d-none');
     status.textContent = 'Lijst wordt opgehaald...';
-    fetch('{{ url_for('refresh') }}', {
+    fetch("{{ url_for('refresh') }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -141,7 +141,7 @@ document.addEventListener('click', function(e) {
         updateUnfollowButtons();
 
         // Send unfollow request
-        fetch('{{ url_for('unfollow', pk='__PK__') }}'.replace('__PK__', pk), {
+        fetch("{{ url_for('unfollow', pk='__PK__') }}".replace('__PK__', pk), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
