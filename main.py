@@ -112,7 +112,9 @@ def index():
     insta_user = os.getenv('INSTA_USERNAME')
     insta_pass_set = bool(os.getenv('INSTA_PASSWORD'))
     targets = session.get('targets', [])
-    return render_template('index.html', targets=targets, insta_user=insta_user, insta_pass_set=insta_pass_set)
+    # Limit to first 200 for display
+    limited_targets = targets[:200]
+    return render_template('index.html', targets=limited_targets, insta_user=insta_user, insta_pass_set=insta_pass_set)
 
 @app.route('/refresh', methods=['POST'])
 @login_required

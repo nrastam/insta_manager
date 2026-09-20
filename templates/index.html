@@ -34,18 +34,20 @@
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th>Username</th>
-                    <th>Volledige naam</th>
+                    <th>Account username</th>
+                    <th>Display name</th>
+                    <th>Profiel</th>
                     <th>Actie</th>
                 </tr>
             </thead>
             <tbody id="targetsBody">
                 {% for t in targets %}
                 <tr>
-                    <td>{{ loop.index }}</td>
                     <td>@{{ t.username }}</td>
                     <td>{{ t.full_name }}</td>
+                    <td>
+                        <a href="https://www.instagram.com/{{ t.username }}/" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">Open profiel</a>
+                    </td>
                     <td>
                         <form method="post" action="{{ url_for('unfollow', pk=t.pk) }}" class="d-inline">
                             <button type="submit" class="btn btn-danger btn-sm">Unfollow</button>
