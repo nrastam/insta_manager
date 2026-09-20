@@ -23,8 +23,14 @@
         <p><strong>Instagram gebruikersnaam:</strong> {{ insta_user if insta_user else '(niet ingesteld)' }}</p>
         <p><strong>Wachtwoord ingesteld:</strong> {{ 'Ja' if insta_pass_set else 'Nee' }}</p>
     </div>
-    <form method="post" action="{{ url_for('refresh') }}" class="mb-3">
-        <button type="submit" class="btn btn-primary">Lijst vernieuwen</button>
+    <form id="refreshForm" method="post" action="{{ url_for('refresh') }}">
+        <button type="submit" class="btn btn-primary" id="refreshBtn">Lijst ophalen</button>
+        <div class="ms-3" id="spinner" class="d-none">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Laden...</span>
+            </div>
+        </div>
+        <div id="status" class="ms-3 mt-2 small"></div>
     </form>
     {% if targets %}
         <table class="table table-striped table-hover">
@@ -36,7 +42,7 @@
                     <th>Actie</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="targetsBody">
                 {% for t in targets %}
                 <tr>
                     <td>{{ loop.index }}</td>
@@ -52,9 +58,47 @@
             </tbody>
         </table>
     {% else %}
-        <p>Geen gegevens beschikbaar. Klik op 'Lijst vernieuwen' om de lijst op te halen (na het invullen van de Instagram‑credentials in de .env).</p>
+        <p>Geen gegevens beschikbaar. Klik op 'Lijst ophalen' om de lijst op te halen (na het invullen van de Instagram‑credentials in de .env).</p>
     {% endif %}
 </div>
+<script>
+document.getElementById('refreshForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // prevent normal submit
+    const btn = document.getElementById('refreshBtn');
+    const spinner = document.getElementById('spinner');
+    const status = document.getElementById('status');
+    btn.disabled = true;
+    spinner.classList.remove('d-none');
+    status.textContent = 'Lijst wordt opgehaald...';
+    // Perform fetch
+    fetch('{{ url_for('refresh') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(new FormData(this)).toString()
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            status.textContent = data.message || 'Lijst succesvol opgehaald';
+            // Optionally reload to show updated list
+            setTimeout(() => { location.reload(); }, 1500);
+        } else {
+            status.textContent = 'Fout: ' + (data.error || 'onbekende fout');
+            status.style.color = 'dc3545';
+        }
+    })
+    .catch(err => {
+        status.textContent = 'Netwerkfout: ' + err;
+        status.style.color = 'dc3545';
+    })
+    .finally(() => {
+        btn.disabled = false;
+        spinner.classList.add('d-none');
+    });
+});
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

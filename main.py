@@ -1,7 +1,7 @@
 import os
 import json
 import time
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from instagrapi import Client
 
 app = Flask(__name__)
@@ -89,10 +89,15 @@ def refresh():
     try:
         targets = get_not_following_back()
         session['targets'] = targets
-        flash(f'Lijst vernieuwd: {len(targets)} accounts gevonden', 'success')
+        return jsonify({
+            'success': True,
+            'message': f'Lijst vernieuwd: {len(targets)} accounts gevonden'
+        })
     except Exception as e:
-        flash(f'Error fetching data: {e}', 'danger')
-    return redirect(url_for('index'))
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @app.route('/unfollow/<pk>', methods=['POST'])
 @login_required
