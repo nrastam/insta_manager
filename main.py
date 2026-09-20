@@ -31,19 +31,15 @@ def login_instagram():
 def get_not_following_back():
     login_instagram()
     user_id = cl.user_id_from_username(cl.username)
-    # Get raw returns; they could be dict or list
     following_raw = cl.user_following(user_id, amount=0)
     followers_raw = cl.user_followers(user_id, amount=0)
     
-    # Helper to extract list of user objects
     def extract_users(raw):
         if isinstance(raw, dict):
-            # dict of pk: user
             return list(raw.values())
         elif isinstance(raw, list):
             return raw
         else:
-            # fallback: try to iterate
             try:
                 return list(raw)
             except Exception:
@@ -52,7 +48,6 @@ def get_not_following_back():
     following_users = extract_users(following_raw)
     followers_users = extract_users(followers_raw)
     
-    # Build sets of pk
     following_pks = set()
     followers_pks = set()
     user_by_pk = {}
@@ -112,7 +107,6 @@ def index():
     insta_user = os.getenv('INSTA_USERNAME')
     insta_pass_set = bool(os.getenv('INSTA_PASSWORD'))
     targets = load_targets()
-    # Limit to first 200 for display
     limited_targets = targets[:200]
     return render_template('index.html', targets=limited_targets, insta_user=insta_user, insta_pass_set=insta_pass_set)
 
@@ -121,13 +115,11 @@ def index():
 def refresh():
     try:
         targets = get_not_following_back()
-        # session['targets'] = targets  # not needed, but keep if desired
         return jsonify({
             'success': True,
             'message': f'Lijst vernieuwd: {len(targets)} accounts gevonden'
         })
     except Exception as e:
-        # Return detailed error for debugging
         return jsonify({
             'success': False,
             'error': str(e),
@@ -140,17 +132,22 @@ def unfollow(pk):
     try:
         login_instagram()
         cl.user_unfollow(pk)
-        flash(f'Unfollowed user {pk}', 'success')
         # remove from list
         targets = load_targets()
         targets = [t for t in targets if t['pk'] != pk]
         save_targets(targets)
         time.sleep(5)  # simple rate limit
+        return jsonify({
+            'success': True,
+            'message': f'Unfollowed user {pk}'
+        })
     except Exception as e:
-        flash(f'Error unfollowing: {e}', 'danger')
-    return redirect(url_for('index'))
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'type': type(e).__name__
+        }), 500
 
 if __name__ == '__main__':
-    # Ensure data directory exists
     os.makedirs('data', exist_ok=True)
     app.run(host='0.0.0.0', port=5000, debug=True)
