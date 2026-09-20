@@ -111,7 +111,7 @@ def logout():
 def index():
     insta_user = os.getenv('INSTA_USERNAME')
     insta_pass_set = bool(os.getenv('INSTA_PASSWORD'))
-    targets = session.get('targets', [])
+    targets = load_targets()
     # Limit to first 200 for display
     limited_targets = targets[:200]
     return render_template('index.html', targets=limited_targets, insta_user=insta_user, insta_pass_set=insta_pass_set)
@@ -121,7 +121,7 @@ def index():
 def refresh():
     try:
         targets = get_not_following_back()
-        session['targets'] = targets
+        # session['targets'] = targets  # not needed, but keep if desired
         return jsonify({
             'success': True,
             'message': f'Lijst vernieuwd: {len(targets)} accounts gevonden'
@@ -142,9 +142,9 @@ def unfollow(pk):
         cl.user_unfollow(pk)
         flash(f'Unfollowed user {pk}', 'success')
         # remove from list
-        targets = session.get('targets', [])
+        targets = load_targets()
         targets = [t for t in targets if t['pk'] != pk]
-        session['targets'] = targets
+        save_targets(targets)
         time.sleep(5)  # simple rate limit
     except Exception as e:
         flash(f'Error unfollowing: {e}', 'danger')
