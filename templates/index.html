@@ -154,7 +154,6 @@ document.addEventListener('click', function(e) {
         .then(data => {
             if (data.success) {
                 // Optionally show success, but we will just remove row after short delay
-                btn.closest('tr').fadeOut? Actually we can remove row after timeout.
                 // For simplicity, we will reload after a short delay to reflect removal.
                 setTimeout(() => { location.reload(); }, 2000);
             } else {
