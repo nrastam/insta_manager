@@ -60,7 +60,9 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        if username == 'admin' and password == 'admin':
+        expected_user = os.getenv('FRONTEND_USERNAME', 'admin')
+        expected_pass = os.getenv('FRONTEND_PASSWORD', 'admin')
+        if username == expected_user and password == expected_pass:
             session['logged_in'] = True
             flash('Ingelogd', 'success')
             return redirect(url_for('index'))
