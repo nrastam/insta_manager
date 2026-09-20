@@ -27,21 +27,34 @@ def login_instagram():
         raise ValueError('Instagram credentials not set in environment variables')
     cl.login(username, password)
 
+def _to_dict(obj):
+    """Convert a list of objects (User or dict) to dict keyed by pk."""
+    if isinstance(obj, dict):
+        return obj
+    if isinstance(obj, list):
+        result = {}
+        for item in obj:
+            if isinstance(item, dict):
+                pk = item.get('pk')
+            else:
+                pk = getattr(item, 'pk', None)
+            if pk is not None:
+                result[pk] = item
+        return result
+    # fallback: try to treat as dict-like
+    try:
+        return dict(obj)
+    except Exception:
+        return {}
+
 def get_not_following_back():
     login_instagram()
     user_id = cl.user_id_from_username(cl.username)
-    following = cl.user_following(user_id, amount=0)  # dict or list?
-    followers = cl.user_followers(user_id, amount=0)
-    # Normalize to dict of pk: user
-    if isinstance(following, list):
-        following_dict = {u.pk: u for u in following}
-    else:
-        following_dict = following
-    if isinstance(followers, list):
-        followers_dict = {u.pk: u for u in followers}
-    else:
-        followers_dict = followers
-    not_following_back = [user for uid, user in following_dict.items() if uid not in followers_dict]
+    following_raw = cl.user_following(user_id, amount=0)  # dict or list?
+    followers_raw = cl.user_followers(user_id, amount=0)
+    following = _to_dict(following_raw)
+    followers = _to_dict(followers_raw)
+    not_following_back = [user for uid, user in following.items() if uid not in followers]
     result = [{'pk': uid, 'username': user.username, 'full_name': user.full_name} for uid, user in not_following_back.items()]
     save_targets(result)
     return result
