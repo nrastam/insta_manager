@@ -7,8 +7,7 @@ services:
     restart: unless-stopped
     ports:
       - "5000:5000"
-    environment:
-      - INSTA_USERNAME=${INSTA_USERNAME}
-      - INSTA_PASSWORD=${INSTA_PASSWORD}
+    env_file:
+      - .env
     volumes:
       - ./data:/app/data  # persist the JSON file between container restarts
