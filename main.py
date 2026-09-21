@@ -115,9 +115,11 @@ def index():
 def refresh():
     try:
         targets = get_not_following_back()
+        limited_targets = targets[:200]
         return jsonify({
             'success': True,
-            'message': f'Lijst vernieuwd: {len(targets)} accounts gevonden'
+            'message': f'Lijst vernieuwd: {len(targets)} accounts gevonden',
+            'targets': limited_targets
         })
     except Exception as e:
         return jsonify({

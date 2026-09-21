@@ -159,7 +159,27 @@ refreshForm.addEventListener('submit', function(e) {
     .then(data => {
         if (data.success) {
             statusDiv.textContent = data.message || 'Lijst succesvol opgehaald';
-            setTimeout(() => { location.reload(); }, 1500);
+            // Clear selection set
+            selectedPkSet.clear();
+            updateSelectionUI();
+            // Replace table body
+            const tbody = document.getElementById('targetsBody');
+            if (data.targets && data.targets.length > 0) {
+                let rows = '';
+                data.targets.forEach((t, idx) => {
+                    rows += `
+                        <tr>
+                            <td><input type="checkbox" class="select-checkbox" data-pk="${t.pk}"></td>
+                            <td>@${t.username}</td>
+                            <td>${t.full_name}</td>
+                            <td><a href="https://www.instagram.com/${t.username}/" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm">Open profiel</a></td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = rows;
+            } else {
+                tbody.innerHTML = '';
+            }
         } else {
             statusDiv.textContent = 'Fout: ' + (data.error || 'onbekende fout') + ' (type: ' + (data.type || 'unknown') + ')';
             statusDiv.style.color = 'dc3545';
