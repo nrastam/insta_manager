@@ -220,16 +220,39 @@ unfollowSelectedBtn.addEventListener('click', function() {
         // All done
         selectedPkSet.clear();
         updateSelectionUI();
-        // Show success message in bar
+        // Hide progress bar
         progressContainer.classList.add('d-none');
-        selectedCountSpan.textContent = 'De actie is succesvol uitgevoerd.';
-        unfollowSelectedBtn.textContent = 'Sluiten';
-        unfollowSelectedBtn.disabled = false;
-        unfollowSelectedBtn.onclick = function() {
-            selectedBar.classList.add('d-none');
-            unfollowSelectedBtn.textContent = 'Unfollow selected';
-            unfollowSelectedBtn.onclick = unfollowSelectedBtnHandler; // reset
-        };
+        // Refresh list via AJAX
+        fetch("{{ url_for('refresh') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(new FormData(refreshForm)).toString()
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                statusDiv.textContent = data.message || 'Lijst ververst';
+                statusDiv.style.color = 'green';
+                // Optionally show success in bar then hide
+                selectedCountSpan.textContent = 'De actie is succesvol uitgevoerd.';
+                unfollowSelectedBtn.textContent = 'Sluiten';
+                unfollowSelectedBtn.disabled = false;
+                unfollowSelectedBtn.onclick = function() {
+                    selectedBar.classList.add('d-none');
+                    unfollowSelectedBtn.textContent = 'Unfollow selected';
+                    unfollowSelectedBtn.onclick = unfollowSelectedBtnHandler; // reset
+                };
+            } else {
+                statusDiv.textContent = 'Fout bij ververen: ' + (data.error || 'onbekende fout') + ' (type: ' + (data.type || 'unknown') + ')';
+                statusDiv.style.color = 'dc3545';
+            }
+        })
+        .catch(err => {
+            statusDiv.textContent = 'Netwerkfout bij ververen: ' + err;
+            statusDiv.style.color = 'dc3545';
+        });
     })();
 });
 
